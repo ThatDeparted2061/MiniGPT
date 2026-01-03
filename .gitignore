@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Data & checkpoints
+data/
+*.bin
+*.idx
+checkpoints/
+*.pt
+*.ckpt
+*.safetensors
+wandb/
+runs/
+logs/
+
+# Tokenizer artifacts
+*.model
+*.vocab
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/

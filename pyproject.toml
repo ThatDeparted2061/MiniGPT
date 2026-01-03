@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minigpt"
+version = "0.1.0"
+description = "LLM pretraining and alignment from scratch: GPT pretraining, SFT + LoRA, DPO, and fast inference."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "MiniGPT" }]
+dependencies = [
+    "torch>=2.1.0",
+    "numpy>=1.24.0",
+    "tiktoken>=0.5.0",
+    "datasets>=2.14.0",
+    "tqdm>=4.66.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+serve = ["vllm>=0.3.0"]
+flash = ["flash-attn>=2.3.0"]
+dev = ["pytest>=7.4.0"]
+
+[project.scripts]
+minigpt-pretrain = "minigpt.train.pretrain:main"
+minigpt-sft = "minigpt.train.sft:main"
+minigpt-dpo = "minigpt.train.dpo:main"
+minigpt-generate = "minigpt.inference.generate:main"
+minigpt-serve = "minigpt.serve.server:main"
+
+[tool.setuptools.packages.find]
+include = ["minigpt*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
