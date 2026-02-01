@@ -30,8 +30,8 @@ class Block(nn.Module):
         self.ln_2 = nn.LayerNorm(config.n_embd, bias=config.bias)
         self.mlp = MLP(config)
 
-    def forward(self, x, kv_cache=None):
-        attn_out, new_cache = self.attn(self.ln_1(x), kv_cache=kv_cache)
+    def forward(self, x, kv_cache=None, attn_mask=None):
+        attn_out, new_cache = self.attn(self.ln_1(x), kv_cache=kv_cache, attn_mask=attn_mask)
         x = x + attn_out
         x = x + self.mlp(self.ln_2(x))
         return x, new_cache
@@ -74,15 +74,20 @@ class GPT(nn.Module):
             n -= self.transformer.wpe.weight.numel()
         return n
 
-    def forward(self, idx, targets=None, kv_caches=None):
+    def forward(self, idx, targets=None, kv_caches=None, position_ids=None, attn_mask=None):
         B, T = idx.shape
         # Position offset accounts for tokens already in the KV-cache.
         past_len = 0
         if kv_caches is not None and kv_caches[0] is not None and kv_caches[0][0] is not None:
             past_len = kv_caches[0][0].shape[2]
-        assert past_len + T <= self.config.block_size, "sequence exceeds block size"
 
-        pos = torch.arange(past_len, past_len + T, dtype=torch.long, device=idx.device)
+        if position_ids is not None:
+            # Explicit per-row positions: required when a continuous-batching
+            # engine packs sequences of differing lengths into one decode step.
+            pos = position_ids
+        else:
+            assert past_len + T <= self.config.block_size, "sequence exceeds block size"
+            pos = torch.arange(past_len, past_len + T, dtype=torch.long, device=idx.device)
         x = self.transformer.drop(
             self.transformer.wte(idx) + self.transformer.wpe(pos)
         )
@@ -93,7 +98,7 @@ class GPT(nn.Module):
             if self.config.grad_checkpoint and self.training and cache is None:
                 x, nc = checkpoint(block, x, None, use_reentrant=False)
             else:
-                x, nc = block(x, kv_cache=cache)
+                x, nc = block(x, kv_cache=cache, attn_mask=attn_mask)
             new_caches.append(nc)
         x = self.transformer.ln_f(x)
 

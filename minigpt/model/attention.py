@@ -38,7 +38,7 @@ class CausalSelfAttention(nn.Module):
                 "mask", mask.view(1, 1, config.block_size, config.block_size)
             )
 
-    def forward(self, x, kv_cache=None):
+    def forward(self, x, kv_cache=None, attn_mask=None):
         B, T, C = x.shape
         q, k, v = self.c_attn(x).split(self.n_embd, dim=2)
         # (B, n_head, T, head_dim)
@@ -58,19 +58,25 @@ class CausalSelfAttention(nn.Module):
 
         # When decoding from a cache, the incoming query is causal w.r.t. all
         # cached keys, so an explicit mask is only needed for the prefill step.
-        is_causal = kv_cache is None or (new_cache is not None and q.shape[2] == k.shape[2])
+        # An external ``attn_mask`` (e.g. a key-padding mask from a continuously
+        # batched, left-padded decode step) overrides the implicit causal mask.
+        is_causal = attn_mask is None and (
+            kv_cache is None or (new_cache is not None and q.shape[2] == k.shape[2])
+        )
 
         if self.flash:
             y = F.scaled_dot_product_attention(
                 q, k, v,
-                attn_mask=None,
+                attn_mask=attn_mask,
                 dropout_p=self.dropout if self.training else 0.0,
                 is_causal=is_causal,
             )
         else:
             att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(self.head_dim))
             Tq, Tk = q.shape[2], k.shape[2]
-            if is_causal:
+            if attn_mask is not None:
+                att = att.masked_fill(~attn_mask, float("-inf"))
+            elif is_causal:
                 att = att.masked_fill(
                     self.mask[:, :, Tk - Tq:Tk, :Tk] == 0, float("-inf")
                 )
