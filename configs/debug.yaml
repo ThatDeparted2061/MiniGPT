@@ -1,0 +1,31 @@
+# Tiny config for smoke-testing the training loop on CPU.
+model:
+  vocab_size: 50257
+  block_size: 64
+  n_layer: 2
+  n_head: 2
+  n_embd: 128
+  dropout: 0.0
+  bias: false
+  grad_checkpoint: false
+
+optim:
+  lr: 1.0e-3
+  min_lr: 1.0e-4
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+
+schedule:
+  warmup_steps: 10
+  max_steps: 100
+
+train:
+  batch_size: 4
+  grad_accum_steps: 1
+  eval_interval: 25
+  ckpt_interval: 50
+  mixed_precision: fp32
+  data_dir: data/shakespeare
+  out_dir: out/debug

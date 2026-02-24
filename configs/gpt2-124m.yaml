@@ -1,0 +1,31 @@
+# GPT-2 small (124M) pretraining config.
+model:
+  vocab_size: 50257
+  block_size: 1024
+  n_layer: 12
+  n_head: 12
+  n_embd: 768
+  dropout: 0.0
+  bias: false
+  grad_checkpoint: false
+
+optim:
+  lr: 6.0e-4
+  min_lr: 6.0e-5
+  weight_decay: 0.1
+  beta1: 0.9
+  beta2: 0.95
+  grad_clip: 1.0
+
+schedule:
+  warmup_steps: 2000
+  max_steps: 600000
+
+train:
+  batch_size: 12
+  grad_accum_steps: 40    # effective tokens/step ~= 0.5M
+  eval_interval: 1000
+  ckpt_interval: 5000
+  mixed_precision: bf16
+  data_dir: data/openwebtext
+  out_dir: out/gpt2-124m
