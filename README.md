@@ -104,8 +104,22 @@ minigpt-serve --ckpt checkpoints/dpo/latest.pt --port 8000
 ## Testing
 
 ```bash
-pytest
+make test     # or: pytest -q
 ```
+
+## Development
+
+Common tasks are wrapped in the [`Makefile`](Makefile):
+
+```bash
+make dev          # editable install with dev extras
+make test         # run the test suite
+make debug        # smoke-test the training loop on CPU (configs/debug.yaml)
+make lint         # ruff check
+```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines, [`docs/architecture.md`](docs/architecture.md)
+for a module tour, and [`CHANGELOG.md`](CHANGELOG.md) for release notes.
 
 ## License
 
